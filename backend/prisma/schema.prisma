@@ -11,3 +11,55 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserRole {
+  ADMIN
+  THEATER_CHAIN
+  CUSTOMER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  theaterChain TheaterChain?
+}
+
+model TheaterChain {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  companyName String   @unique
+  phoneNumber String
+  address     String
+  logoUrl     String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  theaters Theater[]
+}
+
+model Theater {
+  id             String   @id @default(uuid())
+  theaterChainId String
+  name           String
+  phoneNumber    String
+  isActive       Boolean  @default(true)
+  street         String
+  city           String
+  state          String
+  postalCode     String
+  country        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  theaterChain TheaterChain @relation(fields: [theaterChainId], references: [id], onDelete: Restrict)
+
+  @@index([theaterChainId])
+}
