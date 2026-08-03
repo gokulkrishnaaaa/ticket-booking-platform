@@ -83,6 +83,7 @@ model Screen {
 
   theater Theater @relation(fields: [theaterId], references: [id], onDelete: Restrict)
   seats   Seat[]
+  shows   Show[]
 
   @@unique([theaterId, name])
   @@index([theaterId])
@@ -104,7 +105,8 @@ model Seat {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  screen Screen @relation(fields: [screenId], references: [id], onDelete: Restrict)
+  screen    Screen     @relation(fields: [screenId], references: [id], onDelete: Restrict)
+  showSeats ShowSeat[]
 
   @@unique([screenId, row, number])
   @@index([screenId])
@@ -123,5 +125,51 @@ model Movie {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  shows Show[]
+
   @@index([title])
+}
+
+model Show {
+  id        String   @id @default(uuid())
+  movieId   String
+  screenId  String
+  language  String
+  startTime DateTime
+  endTime   DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movie     Movie      @relation(fields: [movieId], references: [id], onDelete: Restrict)
+  screen    Screen     @relation(fields: [screenId], references: [id], onDelete: Restrict)
+  showSeats ShowSeat[]
+
+  @@index([movieId])
+  @@index([screenId, startTime])
+}
+
+enum ShowSeatStatus {
+  AVAILABLE
+  RESERVED
+  BOOKED
+  BLOCKED
+}
+
+model ShowSeat {
+  id            String         @id @default(uuid())
+  showId        String
+  seatId        String
+  status        ShowSeatStatus @default(AVAILABLE)
+  price         Decimal
+  reservedUntil DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  show Show @relation(fields: [showId], references: [id], onDelete: Restrict)
+  seat Seat @relation(fields: [seatId], references: [id], onDelete: Restrict)
+
+  @@unique([showId, seatId])
+  @@index([showId])
+  @@index([seatId])
 }
