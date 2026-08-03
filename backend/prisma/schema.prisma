@@ -60,6 +60,52 @@ model Theater {
   updatedAt      DateTime @updatedAt
 
   theaterChain TheaterChain @relation(fields: [theaterChainId], references: [id], onDelete: Restrict)
+  screens      Screen[]
 
   @@index([theaterChainId])
+}
+
+enum ScreenType {
+  STANDARD
+  IMAX
+  DX4
+  DOLBY
+}
+
+model Screen {
+  id         String     @id @default(uuid())
+  theaterId  String
+  name       String
+  screenType ScreenType @default(STANDARD)
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  theater Theater @relation(fields: [theaterId], references: [id], onDelete: Restrict)
+  seats   Seat[]
+
+  @@unique([theaterId, name])
+  @@index([theaterId])
+}
+
+enum SeatType {
+    REGULAR
+    PREMIUM
+    RECLINER
+}
+
+model Seat {
+  id        String   @id @default(uuid())
+  screenId  String
+  row       String
+  number    Int
+  seatType  SeatType  @default(REGULAR)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  screen Screen @relation(fields: [screenId], references: [id], onDelete: Restrict)
+
+  @@unique([screenId, row, number])
+  @@index([screenId])
 }
