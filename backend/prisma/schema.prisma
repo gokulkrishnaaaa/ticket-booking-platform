@@ -89,9 +89,9 @@ model Screen {
 }
 
 enum SeatType {
-    REGULAR
-    PREMIUM
-    RECLINER
+  REGULAR
+  PREMIUM
+  RECLINER
 }
 
 model Seat {
@@ -99,7 +99,7 @@ model Seat {
   screenId  String
   row       String
   number    Int
-  seatType  SeatType  @default(REGULAR)
+  seatType  SeatType @default(REGULAR)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -108,4 +108,20 @@ model Seat {
 
   @@unique([screenId, row, number])
   @@index([screenId])
+}
+
+model Movie {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  languages   String[]
+  duration    Int
+  genres      String[]
+  posterUrl   String?
+  releaseDate DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([title])
 }
