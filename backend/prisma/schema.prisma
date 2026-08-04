@@ -258,7 +258,7 @@ enum TicketStatus {
 }
 
 model Ticket {
-  id           String       @default(uuid())
+  id           String       @id @default(uuid())
   ticketNumber String       @unique
   bookingId    String
   showSeatId   String       @unique
