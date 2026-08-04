@@ -171,6 +171,7 @@ model ShowSeat {
   show         Show          @relation(fields: [showId], references: [id], onDelete: Restrict)
   seat         Seat          @relation(fields: [seatId], references: [id], onDelete: Restrict)
   bookingSeats BookingSeat[]
+  ticket       Ticket?
 
   @@unique([showId, seatId])
   @@index([showId])
@@ -198,6 +199,7 @@ model Booking {
   show         Show          @relation(fields: [showId], references: [id], onDelete: Restrict)
   bookingSeats BookingSeat[]
   payments     Payment[]
+  tickets      Ticket[]
 
   @@index([userId])
   @@index([showId])
@@ -245,6 +247,27 @@ model Payment {
   updatedAt     DateTime       @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+}
+
+enum TicketStatus {
+  ISSUED
+  USED
+  CANCELLED
+}
+
+model Ticket {
+  id           String       @default(uuid())
+  ticketNumber String       @unique
+  bookingId    String
+  showSeatId   String       @unique
+  status       TicketStatus @default(ISSUED)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  booking  Booking  @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  showSeat ShowSeat @relation(fields: [showSeatId], references: [id], onDelete: Restrict)
 
   @@index([bookingId])
 }
