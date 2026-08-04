@@ -197,6 +197,7 @@ model Booking {
   user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
   show         Show          @relation(fields: [showId], references: [id], onDelete: Restrict)
   bookingSeats BookingSeat[]
+  payments     Payment[]
 
   @@index([userId])
   @@index([showId])
@@ -211,4 +212,39 @@ model BookingSeat {
 
   @@id([bookingId, showSeatId])
   @@index([showSeatId])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+  NET_BANKING
+  WALLET
+}
+
+enum PaymentGateway {
+  RAZORPAY
+}
+
+model Payment {
+  id            String         @id @default(uuid())
+  bookingId     String
+  transactionId String?        @unique
+  gateway       PaymentGateway
+  paymentMethod PaymentMethod
+  amount        Decimal
+  status        PaymentStatus  @default(PENDING)
+  failureReason String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
 }
