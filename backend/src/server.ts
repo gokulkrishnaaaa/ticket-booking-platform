@@ -1,12 +1,11 @@
 import http from "http";
 import app from "./app";
-
-const port = process.env.PORT || 5000;
+import { env } from "./config/env";
 
 const server = http.createServer(app);
 
-server.listen(port, ()=> {
-    console.log(`Server is running on port ${port}`);
+server.listen(env.port, ()=> {
+    console.log(`Server is running on port ${env.port}`);
 });
 
 export default server;
