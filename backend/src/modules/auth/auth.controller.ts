@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
-import { register as registerUser, login as loginUser } from "./auth.service";
+import {
+  register as registerUser,
+  login as loginUser,
+  refreshAccessToken,
+} from "./auth.service";
 import { HTTP_STATUS } from "../../constants/http-status-codes";
 import { env } from "../../config/env";
+import { AppError } from "../../errors/AppError";
+import { success } from "zod";
 
 export async function register(req: Request, res: Response) {
   const user = await registerUser(req.body);
@@ -17,14 +23,40 @@ export async function login(req: Request, res: Response) {
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure : env.nodeEnv === "production",
-    sameSite : "lax"
-  })
+    secure: env.nodeEnv === "production",
+    sameSite: "lax",
+  });
 
   return res.status(HTTP_STATUS.OK).json({
-    success :  true,
-    data : {
-        accessToken,
-    }
-  })
+    success: true,
+    data: {
+      accessToken,
+    },
+  });
+}
+
+export async function refresh(req: Request, res: Response) {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    throw new AppError("Refresh token required", HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  const accessToken = await refreshAccessToken(refreshToken);
+
+  return res.status(HTTP_STATUS.OK).json({
+    success: true,
+    data: {
+      accessToken,
+    },
+  });
+}
+
+export async function getMe(req: Request, res: Response) {
+  return res.status(HTTP_STATUS.OK).json({
+    success: true,
+    data: {
+      userId: req.user?.id,
+    },
+  });
 }

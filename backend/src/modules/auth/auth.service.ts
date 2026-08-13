@@ -6,6 +6,8 @@ import { hashPassword, comparePassword } from "../../security/password";
 import {
   generateAccessToken,
   generateRefreshToken,
+  RefreshTokenPayload,
+  verifyRefreshToken,
 } from "../../security/token";
 
 const dummyHash =
@@ -66,5 +68,24 @@ export async function login(data: LoginInput) {
   return {
     accessToken,
     refreshToken,
+  };
+}
+
+export async function refreshAccessToken(refreshToken: string) {
+  let payload: RefreshTokenPayload;
+
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    throw new AppError(
+      "Invalid or expired refresh token",
+      HTTP_STATUS.UNAUTHORIZED,
+    );
+  }
+
+  const accessToken = generateAccessToken(payload.sub);
+
+  return {
+    accessToken,
   };
 }

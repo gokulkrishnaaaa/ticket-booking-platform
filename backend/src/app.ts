@@ -1,10 +1,12 @@
 import express from 'express';
+import cookieParser from "cookie-parser";
 import authRouter from './modules/auth/auth.routes';
 import { errorHandler } from './errors/error-handler.middleware';
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/api/v1/auth', authRouter)
 

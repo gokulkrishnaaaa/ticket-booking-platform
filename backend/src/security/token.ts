@@ -5,6 +5,10 @@ export type AccessTokenPayload = {
   sub: string;
 };
 
+export type RefreshTokenPayload = {
+  sub: string;
+};
+
 export function generateAccessToken(userId: string): string {
   return jwt.sign(
     {
@@ -37,6 +41,17 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
     throw new Error("Invalid access token payload");
   }
 
+  return {
+    sub: payload.sub,
+  };
+}
+
+export function verifyRefreshToken(token: string): RefreshTokenPayload {
+  const payload = jwt.verify(token, env.jwtRefreshSecret);
+
+  if (typeof payload === "string" || typeof payload.sub !== "string") {
+    throw new Error("Invalid refresh token payload");
+  }
   return {
     sub: payload.sub,
   };
