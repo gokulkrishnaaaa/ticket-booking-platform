@@ -1,6 +1,10 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 
+export type AccessTokenPayload = {
+  sub: string;
+};
+
 export function generateAccessToken(userId: string): string {
   return jwt.sign(
     {
@@ -23,4 +27,17 @@ export function generateRefreshToken(userId: string): string {
       expiresIn: env.jwtRefreshExpiresIn,
     },
   );
+}
+
+export function verifyAccessToken(token: string): AccessTokenPayload {
+  const payload = jwt.verify(token, env.jwtAccessSecret);
+
+  //we expect an object(payload) not a string and is sub wrong type
+  if (typeof payload === "string" || typeof payload.sub !== "string") {
+    throw new Error("Invalid access token payload");
+  }
+
+  return {
+    sub: payload.sub,
+  };
 }
