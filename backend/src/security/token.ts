@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
+import crypto from "node:crypto";
 
 export type AccessTokenPayload = {
   sub: string;
@@ -7,7 +8,10 @@ export type AccessTokenPayload = {
 
 export type RefreshTokenPayload = {
   sub: string;
+  jti: string;
 };
+
+const sessionId = crypto.randomUUID();
 
 export function generateAccessToken(userId: string): string {
   return jwt.sign(
@@ -21,10 +25,14 @@ export function generateAccessToken(userId: string): string {
   );
 }
 
-export function generateRefreshToken(userId: string): string {
+export function generateRefreshToken(
+  userId: string,
+  sessionId: string,
+): string {
   return jwt.sign(
     {
       sub: userId,
+      jti: sessionId,
     },
     env.jwtRefreshSecret,
     {
@@ -49,10 +57,19 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
   const payload = jwt.verify(token, env.jwtRefreshSecret);
 
-  if (typeof payload === "string" || typeof payload.sub !== "string") {
+  if (
+    typeof payload === "string" ||
+    typeof payload.sub !== "string" ||
+    typeof payload.jti !== "string"
+  ) {
     throw new Error("Invalid refresh token payload");
   }
   return {
     sub: payload.sub,
+    jti: payload.jti,
   };
+}
+
+export function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
 }

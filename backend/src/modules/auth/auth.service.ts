@@ -6,9 +6,12 @@ import { hashPassword, comparePassword } from "../../security/password";
 import {
   generateAccessToken,
   generateRefreshToken,
+  hashToken,
   RefreshTokenPayload,
   verifyRefreshToken,
 } from "../../security/token";
+import { durationToMilliseconds } from "../../utils/duration";
+import { env } from "../../config/env";
 
 const dummyHash =
   "$2a$12$1Mie/9EeBP1r9Na5d0/1tOeInu1Q/KsV2rbxWEMyu/E/Ij.Qz0/Hq";
@@ -63,7 +66,22 @@ export async function login(data: LoginInput) {
   }
 
   const accessToken = generateAccessToken(user.id);
-  const refreshToken = generateRefreshToken(user.id);
+  const sessionId = crypto.randomUUID();
+
+  const refreshToken = generateRefreshToken(user.id, sessionId);
+  const tokenHash = hashToken(refreshToken);
+  const expiresAt = new Date(
+    Date.now() + durationToMilliseconds(env.jwtRefreshExpiresIn),
+  );
+
+  await prisma.refreshSession.create({
+    data: {
+      id: sessionId,
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    },
+  });
 
   return {
     accessToken,
@@ -83,9 +101,88 @@ export async function refreshAccessToken(refreshToken: string) {
     );
   }
 
+  const session = await prisma.refreshSession.findUnique({
+    where: {
+      id: payload.jti,
+    },
+  });
+
+  if (!session || session.revokedAt || session.expiresAt <= new Date()) {
+    throw new AppError(
+      "Invalid or expired refresh token",
+      HTTP_STATUS.UNAUTHORIZED,
+    );
+  }
+
+  const tokenHash = hashToken(refreshToken);
+
+  if (tokenHash !== session.tokenHash) {
+    throw new AppError(
+      "Invalid or expired refresh token",
+      HTTP_STATUS.UNAUTHORIZED,
+    );
+  }
+
+  const newSessionId = crypto.randomUUID();
+  const newRefreshToken = generateRefreshToken(payload.sub, newSessionId);
+
+  const newTokenHash = hashToken(newRefreshToken);
+  const newExpiresAt = new Date(
+    Date.now() + durationToMilliseconds(env.jwtRefreshExpiresIn),
+  );
+
+  await prisma.$transaction(async (tx) => {
+    const revoked = await tx.refreshSession.updateMany({
+      where: {
+        id: session.id,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+
+    if (revoked.count !== 1) {
+      throw new AppError(
+        "Invalid or expired refresh token",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
+    }
+
+    await tx.refreshSession.create({
+      data: {
+        id: newSessionId,
+        userId: payload.sub,
+        tokenHash: newTokenHash,
+        expiresAt: newExpiresAt,
+      },
+    });
+  });
+
   const accessToken = generateAccessToken(payload.sub);
 
   return {
     accessToken,
+    refreshToken: newRefreshToken,
   };
+}
+
+export async function logout(refreshToken: string) {
+  let payload: RefreshTokenPayload;
+
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    return;
+  }
+
+  await prisma.refreshSession.updateMany({
+    where: {
+      id: payload.jti,
+      revokedAt: null,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  });
 }
