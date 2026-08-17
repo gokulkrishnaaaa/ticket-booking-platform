@@ -1,19 +1,24 @@
-import express from 'express';
+import express from "express";
 import cookieParser from "cookie-parser";
-import authRouter from './modules/auth/auth.routes';
-import { errorHandler } from './errors/error-handler.middleware';
+import authRouter from "./modules/auth/auth.routes";
+import theaterChainRouter from "./modules/theater-chain/theater-chain.route";
+import { errorHandler } from "./errors/error-handler.middleware";
+import adminRouter from "./modules/admin/admin.routes";
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/v1/auth', authRouter)
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/theater-chain", theaterChainRouter);
+app.use("/api/v1/admin", adminRouter);
+
 
 app.use(errorHandler);
 
-app.get('/', (req, res) => {
-    res.send("Ticket Booking API is running ")
+app.get("/", (req, res) => {
+  res.send("Ticket Booking API is running ");
 });
 
 export default app;

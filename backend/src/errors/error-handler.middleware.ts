@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./AppError";
 import { HTTP_STATUS } from "../constants/http-status-codes";
+import { Prisma } from "../../generated/prisma/client";
 
 export function errorHandler(
   error: Error,
@@ -23,6 +24,15 @@ export function errorHandler(
     }
 
     return res.status(error.statusCode).json(response);
+  }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      return res.status(HTTP_STATUS.CONFLICT).json({
+        success: false,
+        message: "A resource with the provided unique value already exists",
+      });
+    }
   }
 
   console.error(error);

@@ -9,7 +9,6 @@ import {
 import { HTTP_STATUS } from "../../constants/http-status-codes";
 import { env } from "../../config/env";
 import { AppError } from "../../errors/AppError";
-import { success } from "zod";
 
 export async function register(req: Request, res: Response) {
   const user = await registerUser(req.body);
