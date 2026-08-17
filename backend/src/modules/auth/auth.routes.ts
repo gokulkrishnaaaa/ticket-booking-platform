@@ -9,7 +9,7 @@ import {
 } from "./auth.controller";
 import { validate } from "../../middleware/validate.middleware";
 import { loginSchema, registerSchema } from "./auth.validation";
-import { authenticate } from "../../middleware/auth.middleware";
+import { authenticate } from "../../middleware/authenticate.middleware";
 
 const authRouter = Router();
 
