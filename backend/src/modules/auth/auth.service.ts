@@ -186,3 +186,15 @@ export async function logout(refreshToken: string) {
     },
   });
 }
+
+export async function logoutAll(userId: string) {
+  await prisma.refreshSession.updateMany({
+    where: {
+      userId,
+      revokedAt: null,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  });
+}

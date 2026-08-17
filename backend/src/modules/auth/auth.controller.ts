@@ -3,6 +3,7 @@ import {
   register as registerUser,
   login as loginUser,
   logout as logoutUser,
+  logoutAll as logoutAllUser,
   refreshAccessToken,
 } from "./auth.service";
 import { HTTP_STATUS } from "../../constants/http-status-codes";
@@ -83,5 +84,20 @@ export async function logout(req: Request, res: Response) {
   return res.status(HTTP_STATUS.OK).json({
     success: true,
     message: "Logged out successfully",
+  });
+}
+
+export async function logoutAll(req: Request, res: Response) {
+  await logoutAllUser(req.user!.id);
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: env.nodeEnv === "production",
+    sameSite: "lax",
+  });
+
+  return res.status(HTTP_STATUS.OK).json({
+    success: true,
+    message: "Logged out from all devices",
   });
 }
