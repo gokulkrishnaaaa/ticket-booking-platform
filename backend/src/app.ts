@@ -7,6 +7,7 @@ import adminRouter from "./modules/admin/admin.routes";
 import theaterRoutes from "./modules/theater/theater.routes";
 import screenRoutes from "./modules/screen/screen.routes";
 import movieRoutes from "./modules/movies/movie.routes";
+import seatRoutes from "./modules/seat/seat.routes";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/theaters", theaterRoutes);
 app.use("/api/v1/theaters", screenRoutes);
 app.use("/api/v1/movies", movieRoutes);
+app.use("/api/v1/screens", seatRoutes);
 
 app.use(errorHandler);
 
