@@ -3,9 +3,13 @@ import { HTTP_STATUS } from "../../constants/http-status-codes";
 import {
   createShow as createShowService,
   listShows as listShowsService,
+  listShowSeats as listShowSeatsService,
 } from "./show.service";
-import { ShowParams, GetShowsQueryInput } from "./show.validation";
-import { success } from "zod";
+import {
+  ShowParams,
+  GetShowsQueryInput,
+  ShowSeatParams,
+} from "./show.validation";
 
 export async function createShow(req: Request<ShowParams>, res: Response) {
   const show = await createShowService(
@@ -36,5 +40,17 @@ export async function listShows(req: Request, res: Response) {
       page: result.page,
       limit: result.limit,
     },
+  });
+}
+
+export async function listShowSeats(
+  req: Request<ShowSeatParams>,
+  res: Response,
+) {
+  const showSeats = await listShowSeatsService(req.params.showId);
+
+  return res.status(HTTP_STATUS.OK).json({
+    success: true,
+    data: showSeats,
   });
 }

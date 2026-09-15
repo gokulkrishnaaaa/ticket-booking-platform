@@ -21,6 +21,11 @@ export const getShowsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(50).default(20),
 });
 
+export const showSeatParamsSchema = z.object({
+  showId: z.uuid(),
+});
+
 export type CreateShowInput = z.infer<typeof createShowSchema>;
 export type ShowParams = z.infer<typeof showParamsSchema>;
 export type GetShowsQueryInput = z.infer<typeof getShowsQuerySchema>;
+export type ShowSeatParams = z.infer<typeof showSeatParamsSchema>;

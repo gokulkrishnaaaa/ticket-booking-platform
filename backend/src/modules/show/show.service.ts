@@ -1,11 +1,20 @@
-import { startTime } from "pino-http";
 import { HTTP_STATUS } from "../../constants/http-status-codes";
 import { AppError } from "../../errors/AppError";
 import prisma from "../../lib/prisma";
+import { SeatType, ShowSeatStatus } from "../../../generated/prisma/enums";
+import { Prisma } from "../../../generated/prisma/client";
 import { getIndiaDate, getIndiaDayRange } from "../../utils/date";
 import { CreateShowInput, GetShowsQueryInput } from "./show.validation";
 
 const SHOW_TURNAROUND_MINUTES = 15;
+
+type ShowSeatResponse = {
+  id: string;
+  number: number;
+  seatType: SeatType;
+  status: ShowSeatStatus;
+  price: Prisma.Decimal;
+};
 
 export async function createShow(
   userId: string,
@@ -239,6 +248,64 @@ export async function listShows(data: GetShowsQueryInput) {
     total,
     totalPages,
     page: data.page,
-    limit: data.limit
+    limit: data.limit,
   };
+}
+
+export async function listShowSeats(showId: string) {
+  const show = await prisma.show.findFirst({
+    where: {
+      id: showId,
+      isActive: true,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!show) {
+    throw new AppError("Show not found", HTTP_STATUS.NOT_FOUND);
+  }
+
+  const showSeats = await prisma.showSeat.findMany({
+    where: {
+      showId,
+    },
+    select: {
+      id: true,
+      status: true,
+      price: true,
+
+      seat: {
+        select: {
+          id: true,
+          row: true,
+          number: true,
+          seatType: true,
+        },
+      },
+    },
+  });
+
+  //object will have string keys, and each key will contain an array
+  const rows: Record<string, ShowSeatResponse[]> = {};
+
+  for (const showSeat of showSeats) {
+    const row = showSeat.seat.row;
+
+    //empty array for new row(key)
+    if (!rows[row]) {
+      rows[row] = [];
+    }
+
+    rows[row].push({
+      id: showSeat.id,
+      number: showSeat.seat.number,
+      seatType: showSeat.seat.seatType,
+      status: showSeat.status,
+      price: showSeat.price,
+    });
+  }
+
+  return rows;
 }

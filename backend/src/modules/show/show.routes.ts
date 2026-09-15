@@ -6,9 +6,10 @@ import {
   createShowSchema,
   showParamsSchema,
   getShowsQuerySchema,
+  showSeatParamsSchema,
 } from "./show.validation";
 import { UserRole } from "../../../generated/prisma/enums";
-import { createShow, listShows } from "./show.controller";
+import { createShow, listShows, listShowSeats } from "./show.controller";
 
 const router = Router();
 
@@ -21,5 +22,10 @@ router.post(
 );
 
 router.get("/shows", validate({ query: getShowsQuerySchema }), listShows);
+router.get(
+  "/shows/:showId/seats",
+  validate({ params: showSeatParamsSchema }),
+  listShowSeats,
+);
 
 export default router;
