@@ -1,8 +1,9 @@
+import { startTime } from "pino-http";
 import { HTTP_STATUS } from "../../constants/http-status-codes";
 import { AppError } from "../../errors/AppError";
 import prisma from "../../lib/prisma";
-import { getIndiaDate } from "../../utils/date";
-import { CreateShowInput } from "./show.validation";
+import { getIndiaDate, getIndiaDayRange } from "../../utils/date";
+import { CreateShowInput, GetShowsQueryInput } from "./show.validation";
 
 const SHOW_TURNAROUND_MINUTES = 15;
 
@@ -151,4 +152,93 @@ export async function createShow(
   });
 
   return show;
+}
+
+export async function listShows(data: GetShowsQueryInput) {
+  let dateFilter = {};
+
+  if (data.date) {
+    const { startOfDay, startOfNextDay } = getIndiaDayRange(data.date);
+
+    dateFilter = {
+      startTime: {
+        gte: startOfDay,
+        lt: startOfNextDay,
+      },
+    };
+  }
+
+  const where = {
+    isActive: true,
+
+    ...(data.movieId && {
+      movieId: data.movieId,
+    }),
+    ...(data.language && {
+      language: data.language,
+    }),
+    ...(data.city && {
+      screen: {
+        theater: {
+          city: data.city,
+        },
+      },
+    }),
+    ...dateFilter,
+  };
+
+  const skip = (data.page - 1) * data.limit;
+
+  const total = await prisma.show.count({
+    where,
+  });
+
+  const shows = await prisma.show.findMany({
+    where,
+    orderBy: {
+      startTime: "asc",
+    },
+    skip,
+    take: data.limit,
+    select: {
+      id: true,
+      language: true,
+      startTime: true,
+      endTime: true,
+
+      movie: {
+        select: {
+          id: true,
+          title: true,
+          duration: true,
+          genres: true,
+          posterUrl: true,
+        },
+      },
+      screen: {
+        select: {
+          id: true,
+          name: true,
+          screenType: true,
+
+          theater: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const totalPages = Math.ceil(total / data.limit);
+
+  return {
+    shows,
+    total,
+    totalPages,
+    page: data.page,
+    limit: data.limit
+  };
 }

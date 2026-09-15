@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import { HTTP_STATUS } from "../../constants/http-status-codes";
-import { createShow as createShowService } from "./show.service";
-import { ShowParams } from "./show.validation";
+import {
+  createShow as createShowService,
+  listShows as listShowsService,
+} from "./show.service";
+import { ShowParams, GetShowsQueryInput } from "./show.validation";
+import { success } from "zod";
 
 export async function createShow(req: Request<ShowParams>, res: Response) {
   const show = await createShowService(
@@ -14,5 +18,23 @@ export async function createShow(req: Request<ShowParams>, res: Response) {
     success: true,
     message: "Show created successfully",
     data: show,
+  });
+}
+
+export async function listShows(req: Request, res: Response) {
+  //need to change this in future
+  const query = res.locals.validatedQuery as GetShowsQueryInput;
+
+  const result = await listShowsService(query);
+
+  return res.status(HTTP_STATUS.OK).json({
+    success: true,
+    data: result.shows,
+    pagination: {
+      total: result.total,
+      totalPages: result.totalPages,
+      page: result.page,
+      limit: result.limit,
+    },
   });
 }

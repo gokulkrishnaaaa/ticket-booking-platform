@@ -51,6 +51,8 @@ export function validate(schemas: ValidationSchema) {
           result.error.flatten(),
         );
       }
+
+      res.locals.validatedQuery = result.data;
     }
 
     next();

@@ -22,7 +22,7 @@ app.use("/api/v1/theaters", theaterRoutes);
 app.use("/api/v1/theaters", screenRoutes);
 app.use("/api/v1/movies", movieRoutes);
 app.use("/api/v1/screens", seatRoutes);
-app.use("/api/v1/screens", showRoutes);
+app.use("/api/v1", showRoutes);
 
 app.use(errorHandler);
 
