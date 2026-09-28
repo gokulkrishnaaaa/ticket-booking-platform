@@ -236,16 +236,19 @@ enum PaymentGateway {
 }
 
 model Payment {
-  id            String         @id @default(uuid())
-  bookingId     String
-  transactionId String?        @unique
-  gateway       PaymentGateway
-  paymentMethod PaymentMethod
-  amount        Decimal
-  status        PaymentStatus  @default(PENDING)
-  failureReason String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                      String         @id @default(uuid())
+  bookingId               String
+  gatewayOrderId          String?        @unique
+  transactionId           String?        @unique
+  gateway                 PaymentGateway
+  paymentMethod           PaymentMethod
+  amount                  Decimal
+  status                  PaymentStatus  @default(PENDING)
+  failureReason           String?
+  orderCreationInProgress Boolean        @default(false)
+  orderCreationStartedAt  DateTime?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id])
 

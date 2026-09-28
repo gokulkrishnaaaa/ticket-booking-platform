@@ -18,6 +18,8 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: durationSchema,
   ADMIN_EMAIL: z.string().email(),
   ADMIN_PASSWORD: z.string().min(8),
+  RAZORPAY_KEY_ID: z.string().min(1),
+  RAZORPAY_KEY_SECRET: z.string().min(1),
 });
 
 const parsedEnv = envSchema.parse(process.env);
@@ -33,4 +35,6 @@ export const env = {
   jwtRefreshExpiresIn: parsedEnv.JWT_REFRESH_EXPIRES_IN,
   adminEmail: parsedEnv.ADMIN_EMAIL,
   adminPassword: parsedEnv.ADMIN_PASSWORD,
+  razorpayKeyId: parsedEnv.RAZORPAY_KEY_ID,
+  razorpayKeySecret: parsedEnv.RAZORPAY_KEY_SECRET,
 };
